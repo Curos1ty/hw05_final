@@ -8,7 +8,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from ..forms import PostForm
-from ..models import Follow, Group, Post, User
+from ..models import Comment, Follow, Group, Post, User
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -126,7 +126,8 @@ class PostViewsTests(TestCase):
             f'Профайл пользователя {PostViewsTests.author_auth.username}'
         )
         self.assertEqual(
-            response.context['post_count'], PostViewsTests.post.pk
+            response.context['title'],
+            f'Профайл пользователя {PostViewsTests.author_auth.username}'
         )
         self.assertEqual(
             response.context['author'],
@@ -243,7 +244,8 @@ class PostViewsTests(TestCase):
         self.assertNotEqual(first_response.content, third_response.content)
 
     def test_authorized_user_can_follow(self):
-        """Авторизованный пользователь может подписаться на автора
+        """
+        Авторизованный пользователь может подписаться на автора
         и отписаться.
         """
         self.follower_client.get(reverse(
@@ -260,7 +262,8 @@ class PostViewsTests(TestCase):
         self.assertEqual(unfollow_count, 0)
 
     def test_new_post_appears_in_the_subscribers(self):
-        """Новый пост появляется у подписчиков автора поста
+        """
+        Новый пост появляется у подписчиков автора поста
         и отсутвует у тех кто не подписан на автора."""
         self.new_post = Post.objects.create(
             group=PostViewsTests.group,
@@ -278,4 +281,58 @@ class PostViewsTests(TestCase):
         response = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertNotContains(
             response, self.new_post.text
+        )
+
+    def test_authorized_user_can_comment(self):
+        """
+        Авторизованный пользователь может комментировать посты
+        """
+        comments_count = Comment.objects.count()
+        post = Post.objects.create(
+            author=PostViewsTests.author_auth,
+            text='test post',
+            group=self.group
+        )
+        group_2 = Group.objects.create(
+            title='Test group_title2',
+            slug='test_slug2',
+            description='Test description2'
+        )
+        comment = Comment.objects.create(
+            text='Коммент',
+            author=PostViewsTests.author_auth,
+            post=post
+        )
+        data = {
+            'text': 'edit text test',
+            'group': group_2.id,
+            'comments': comment
+        }
+        posts_count = Post.objects.count()
+        response = self.authorized_client.post(
+            reverse(
+                'posts:post_edit', kwargs={'post_id': post.pk}
+            ),
+            data=data,
+            follow=True,
+        )
+        post = response.context['post']
+        self.assertEqual(Post.objects.count(), posts_count)
+        self.assertEqual(Comment.objects.count(), comments_count + 1)
+        self.assertEqual(post.text, data['text'])
+        self.assertEqual(data['group'], post.group.id)
+        self.assertEqual(post.author, self.author_auth)
+        self.assertRedirects(
+            response, reverse(
+                'posts:post_detail', kwargs={'post_id': post.pk}
+            )
+        )
+        self.assertEqual(Post.objects.count(), posts_count)
+        self.assertTrue(
+            Post.objects.filter(
+                text=data['text'],
+                id=post.pk,
+                group=data['group'],
+                comments=data['comments']
+            ).exists()
         )

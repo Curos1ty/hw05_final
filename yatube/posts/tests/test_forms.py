@@ -1,5 +1,6 @@
 import shutil
 import tempfile
+from http import HTTPStatus
 
 from django import forms
 from django.conf import settings
@@ -11,6 +12,14 @@ from ..models import Comment, Group, Post, User
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 NEW_POST = reverse('posts:post_create')
+SMALL_GIF = (
+    b'\x47\x49\x46\x38\x39\x61\x02\x00'
+    b'\x01\x00\x80\x00\x00\x00\x00\x00'
+    b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+    b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+    b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+    b'\x0A\x00\x3B'
+)
 
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
@@ -48,17 +57,9 @@ class PostFormTests(TestCase):
         """
         Проверка создания нового поста авторизованным пользователем
         """
-        small_gif = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
-        )
         uploaded = SimpleUploadedFile(
             name='small.gif',
-            content=small_gif,
+            content=SMALL_GIF,
             content_type='image/gif'
         )
         posts = Post.objects.all()
@@ -80,7 +81,7 @@ class PostFormTests(TestCase):
         self.assertEqual(post.group.pk, data['group'])
         self.assertEqual(post.author, self.author_auth)
         self.assertEqual(Post.objects.count(), posts_count)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertTrue(
             Post.objects.filter(
                 text=data['text'],
@@ -100,17 +101,9 @@ class PostFormTests(TestCase):
         Проверка корректного отображения
         Context нового поста
         """
-        small_gif2 = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
-        )
         uploaded = SimpleUploadedFile(
             name='small2.gif',
-            content=small_gif2,
+            content=SMALL_GIF,
             content_type='image/gif'
         )
         post = Post.objects.create(
@@ -140,6 +133,7 @@ class PostFormTests(TestCase):
     def test_edit_post(self):
         """
         Проверка редактирования поста автором
+        и комментирование поста авторизованынм пользователем
         """
         comments_count = Comment.objects.count()
         post = Post.objects.create(

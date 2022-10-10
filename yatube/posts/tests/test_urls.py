@@ -1,14 +1,11 @@
 from http import HTTPStatus
 
-from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 
 # мой i-sort или i-sort на ЯП не даёт мне
 # делать путь posts.models хотя настройки есть в setup.cfg
 # и так в каждом тесте
-from ..models import Group, Post
-
-User = get_user_model()
+from ..models import Group, Post, User
 
 
 class PostURLTests(TestCase):
@@ -96,3 +93,15 @@ class PostURLTests(TestCase):
             with self.subTest(url=url):
                 response = self.client.get(url, follow=True)
                 self.assertRedirects(response, redirect)
+
+
+# данный тест у меня был в core/tests.py
+class ViewTestClass(TestCase):
+    """
+    Проверка использования корректного шаблона
+    при неизвестной странице
+    """
+    def test_error_page_404(self):
+        response = self.client.get('/nonexist-page/')
+        self.assertTemplateUsed(response, 'core/404.html')
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)

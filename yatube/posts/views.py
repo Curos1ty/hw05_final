@@ -10,7 +10,6 @@ TITLE_POST_LENGTH: int = 30
 
 
 def index(request):
-    template = 'posts/index.html'
     posts = Post.objects.all()
     page_obj = get_paginator(posts, AMOUNT_POSTS, request)
     title = 'Последние обновления на сайте'
@@ -18,29 +17,26 @@ def index(request):
         'title': title,
         'page_obj': page_obj
     }
-    return render(request, template, context)
+    return render(request, 'posts/index.html', context)
 
 
 def group_posts(request, slug):
-    template = 'posts/group_list.html'
     group = get_object_or_404(Group, slug=slug)
     posts = group.posts.all()
     page_obj = get_paginator(posts, AMOUNT_POSTS, request)
-    title = 'Записи сообщества: ' + str(group)
+    title = f'Записи сообщества: {group}'
     context = {
         'posts': posts,
         'group': group,
         'title': title,
         'page_obj': page_obj,
     }
-    return render(request, template, context)
+    return render(request, 'posts/group_list.html', context)
 
 
 def profile(request, username):
-    template = 'posts/profile.html'
     author = get_object_or_404(User, username=username)
     user_posts = author.posts.all()
-    post_count = user_posts.count()
     page_obj = get_paginator(user_posts, AMOUNT_POSTS, request)
     title = f'Профайл пользователя {username}'
     following = (
@@ -51,15 +47,13 @@ def profile(request, username):
         'user_posts': user_posts,
         'title': title,
         'page_obj': page_obj,
-        'post_count': post_count,
         'author': author,
         'following': following
     }
-    return render(request, template, context)
+    return render(request, 'posts/profile.html', context)
 
 
 def post_detail(request, post_id):
-    template = 'posts/post_detail.html'
     post = get_object_or_404(Post, pk=post_id)
     author_post = post.author
     is_edit = False
@@ -76,12 +70,11 @@ def post_detail(request, post_id):
         'comments': comments,
         'form': form,
     }
-    return render(request, template, context)
+    return render(request, 'posts/post_detail.html', context)
 
 
 @login_required
 def post_create(request):
-    template = 'posts/create_post.html'
     form = PostForm(request.POST or None)
 
     if form.is_valid():
@@ -90,12 +83,11 @@ def post_create(request):
         post.save()
         return redirect('posts:profile', post.author.username)
 
-    return render(request, template, {'form': form})
+    return render(request, 'posts/create_post.html', {'form': form})
 
 
 @login_required
 def post_edit(request, post_id):
-    template = 'posts/create_post.html'
     post = get_object_or_404(Post, id=post_id)
 
     if request.user != post.author:
@@ -116,7 +108,7 @@ def post_edit(request, post_id):
         'is_edit': True,
         'form': form,
     }
-    return render(request, template, context)
+    return render(request, 'posts/create_post.html', context)
 
 
 @login_required
@@ -129,13 +121,15 @@ def add_comment(request, post_id):
         comment.author = request.user
         comment.post = post
         comment.save()
-        return redirect('posts:post_detail', post_id=post_id)
+
+    return redirect('posts:post_detail', post_id=post_id)
 
 
 @login_required
 def follow_index(request):
     posts = Post.objects.filter(
-        author__following__user=request.user).select_related('author', 'group')
+        author__following__user=request.user
+    ).select_related('author', 'group')
     page_obj = get_paginator(posts, AMOUNT_POSTS, request)
     context = {
         'page_obj': page_obj
@@ -149,6 +143,7 @@ def profile_follow(request, username):
     author = User.objects.get(username=username)
     follower = Follow.objects.filter(user=user, author=author)
 
+    # тут я не понял, как сделать по другому
     if user != author and not follower.exists():
         Follow.objects.create(user=user, author=author)
 
