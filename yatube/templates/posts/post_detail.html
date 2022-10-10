@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}
-<title> {{ title }} </title>
+<title> Пост {{ post.text|truncatechars:30 }} </title>
 {% endblock %}
 {% block content %}
 {% load user_filters %}
@@ -39,7 +39,7 @@
             <img src="{{ im.url }}" width="{{ im.width}}" height="{{ im.height }}">
           {% endthumbnail %}
           <p>
-            {{ post.text }}
+            {{ post.text|linebreaks }}
           </p>
           {% if author_post == request.user %}
           <ul class="nav nav-pills">
@@ -75,20 +75,20 @@
             </div>
           {% endif %}
           {% for comment in comments %}
-          <div class="media mb-4">
-            <div class="media-body">
-              <h5 class="mt-0">
-                <a href="{% url 'posts:profile' comment.author.username %}">
-                  {{ comment.author.username }}
-                </a>
-                <format style="font-size:12pt">&nbsp; {{ comment.pub_date }} </format>
-              </h5>
-              <p>
-                {{ comment.text }}
-              </p>
+            <div class="media mb-4">
+              <div class="media-body">
+                <h5 class="mt-0">
+                  <a href="{% url 'posts:profile' comment.author.username %}">
+                    {{ comment.author.username }}
+                  </a>
+                  <format style="font-size:12pt">&nbsp; {{ comment.pub_date }} </format>
+                </h5>
+                <p>
+                  {{ comment.text }}
+                </p>
+              </div>
             </div>
-          </div>
-          <hr>
+            <hr>
           {% endfor %} 
         </article>
       </div>

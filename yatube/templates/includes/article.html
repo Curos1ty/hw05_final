@@ -18,7 +18,7 @@
   {% thumbnail post.image "1920x1080" crop="center" upscale=True as im %}
     <img class="card-img" src="{{ im.url }}">
   {% endthumbnail %}
-  <p>{{ post.text }}</p>
+  <p>{{ post.text|linebreaks }}</p>
   <a href="{% url 'posts:post_detail' post.pk %}">
     Подробная информация
   </a>

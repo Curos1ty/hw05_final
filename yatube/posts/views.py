@@ -6,29 +6,21 @@ from .models import Follow, Group, Post, User
 from .utils import get_paginator
 
 AMOUNT_POSTS: int = 10
-TITLE_POST_LENGTH: int = 30
 
 
 def index(request):
     posts = Post.objects.all()
     page_obj = get_paginator(posts, AMOUNT_POSTS, request)
-    title = 'Последние обновления на сайте'
-    context = {
-        'title': title,
-        'page_obj': page_obj
-    }
-    return render(request, 'posts/index.html', context)
+    return render(request, 'posts/index.html', {'page_obj': page_obj})
 
 
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     posts = group.posts.all()
     page_obj = get_paginator(posts, AMOUNT_POSTS, request)
-    title = f'Записи сообщества: {group}'
     context = {
         'posts': posts,
         'group': group,
-        'title': title,
         'page_obj': page_obj,
     }
     return render(request, 'posts/group_list.html', context)
@@ -38,14 +30,12 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     user_posts = author.posts.all()
     page_obj = get_paginator(user_posts, AMOUNT_POSTS, request)
-    title = f'Профайл пользователя {username}'
     following = (
         request.user.is_authenticated
         and Follow.objects.filter(user=request.user, author=author).exists()
     )
     context = {
         'user_posts': user_posts,
-        'title': title,
         'page_obj': page_obj,
         'author': author,
         'following': following
@@ -60,12 +50,10 @@ def post_detail(request, post_id):
     post_count = Post.objects.filter(author=author_post).count()
     comments = post.comments.all()
     form = CommentForm(request.POST)
-    title = f'Пост {post.text[:TITLE_POST_LENGTH]}'
     context = {
         'post': post,
         'author_post': author_post,
         'post_count': post_count,
-        'title': title,
         'is_edit': is_edit,
         'comments': comments,
         'form': form,

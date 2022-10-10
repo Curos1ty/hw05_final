@@ -1,20 +1,13 @@
 {% extends 'base.html' %}
 {% block title %}
   <title>
-    {{ title }}
+    Профайл пользователя {{ author.get_full_name }}
   </title>
 {% endblock %}
 {% block content %}
   <main>
     <div class="container py-5">  
       <h1>Все посты пользователя {{ author.get_full_name }} </h1>
-      <h3>Всего постов: <span> {{ user_posts.count }} </span> </h3>
-      {% comment %}
-        Данные строки я указывал ниже, так как мне больше 
-        понравилась кнопка подписаться сразу после указания автора
-      {% endcomment %}
-      <h5>Всего подписчиков: {{ author.following.count }}</h3>
-      <h5>Всего подписок: {{ author.follower.count }}</h3>
       {% if user != author and user.is_authenticated %}
         {% if following %}
           <a class="btn btn-lg btn-light" href="{% url 'posts:profile_unfollow' author.username %}" role="button">
@@ -26,7 +19,9 @@
           </a>
         {% endif %}
       {% endif %}
-      <br>
+      <h3>Всего постов: <span> {{ user_posts.count }} </span> </h3>
+      <h5>Всего подписчиков: {{ author.following.count }}</h3>
+      <h5>Всего подписок: {{ author.follower.count }}</h3>
       <br>
       {% for post in page_obj %} 
         {% include 'includes/article.html' with all_posts_group_link=True %}

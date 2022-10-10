@@ -103,17 +103,6 @@ class PostViewsTests(TestCase):
                 response = self.authorized_client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
 
-    def test_page_index_correct_context(self):
-        """
-        Шаблон index с правильным Context.
-        """
-        response = self.authorized_client.get(PostViewsTests.page_index)
-        first_obj = response.context['page_obj'][0]
-        self.asserts(first_obj)
-        self.assertEqual(
-            response.context['title'], 'Последние обновления на сайте'
-        )
-
     def test_page_profile_correct_context(self):
         """
         Шаблон profile создан с правильным Context.
@@ -122,16 +111,16 @@ class PostViewsTests(TestCase):
         first_obj = response.context['page_obj'][0]
         self.asserts(first_obj)
         self.assertEqual(
-            response.context['title'],
-            f'Профайл пользователя {PostViewsTests.author_auth.username}'
+            response.context['post'].id, PostViewsTests.post.pk
         )
         self.assertEqual(
-            response.context['title'],
-            f'Профайл пользователя {PostViewsTests.author_auth.username}'
+            response.context['post'].image, PostViewsTests.post.image
         )
         self.assertEqual(
-            response.context['author'],
-            PostViewsTests.author_auth
+            response.context['post'].comments, PostViewsTests.post.comments
+        )
+        self.assertEqual(
+            response.context['author'], PostViewsTests.author_auth
         )
 
     def test_page_group_list_correct_context(self):
@@ -141,10 +130,6 @@ class PostViewsTests(TestCase):
         response = self.authorized_client.get(PostViewsTests.page_group_list)
         first_obj = response.context['page_obj'][0]
         self.asserts(first_obj)
-        self.assertEqual(
-            response.context['title'],
-            f'Записи сообщества: {PostViewsTests.group}'
-        )
         self.assertEqual(
             response.context['group'], PostViewsTests.group
         )
@@ -160,9 +145,6 @@ class PostViewsTests(TestCase):
         )
         self.assertEqual(
             response.context['post'].image, PostViewsTests.post.image
-        )
-        self.assertEqual(
-            response.context['title'], f'Пост {PostViewsTests.post}'
         )
         self.assertEqual(
             response.context['post'].comments, PostViewsTests.post.comments
