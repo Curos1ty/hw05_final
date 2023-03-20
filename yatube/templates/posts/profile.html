@@ -19,7 +19,7 @@
           </a>
         {% endif %}
       {% endif %}
-      <h3>Всего постов: <span> {{ user_posts.count }} </span> </h3>
+      <h3>Всего постов: <span> {{ page_obj.paginator.count }} </span> </h3>
       <h5>Всего подписчиков: {{ author.following.count }}</h3>
       <h5>Всего подписок: {{ author.follower.count }}</h3>
       <br>
